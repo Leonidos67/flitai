@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="./src/css/normalize.css">
+    <link rel="stylesheet" href="./src/css/history.css">
+    <style>
+        .suggests__item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            width: 100%;
+        }
+
+        .suggests__item:hover {
+            background: var(--bg-hover);
+            transform: translateY(-2px);
+        }
+
+        .suggests__item-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: var(--bg-primary);
+        }
+
+        .suggests__item-icon i {
+            font-size: 20px;
+            color: var(--text-color);
+        }
+
+        .topic-item {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            width: 100%;
+        }
+
+        .topic-item:last-child {
+            border-bottom: none;
+        }
+
+        .topic-item-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            width: 100%;
+        }
+
+        .topic-title {
+            font-size: 14px;
+            color: var(--text-color);
+            margin: 0;
+        }
+
+        .topic-date {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .empty-topics {
+            text-align: center;
+            padding: 20px;
+            width: 100%;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+
+        .empty-topics h2 {
+            color: var(--text-color);
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+
+        .empty-topics p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Новые стили для недавних тем */
+        .recent-topics .suggests__item {
+            padding-right: 40px;
+            width: 100%;
+        }
+
+        .recent-topics .suggests__item-text {
+            flex: 1;
+            margin-right: 10px;
+            font-size: 14px;
+            color: var(--text-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .recent-topics .suggests__item-actions {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .recent-topics .suggests__item:hover .suggests__item-actions {
+            opacity: 1;
+        }
+
+        .recent-topics .suggests__item-action {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-primary);
+            border: none;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: all 0.2s ease;
+        }
+
+        .recent-topics .suggests__item-action:hover {
+            background: var(--bg-hover);
+            color: var(--accent-color);
+        }
+
+        .recent-topics .suggests__item-action.delete:hover {
+            color: #ff4444;
+        }
+
+        .recent-topics .suggests__item-date {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .suggests {
+            width: 100%;
+        }
+
+        .history-list {
+            width: 100%;
+        }
+
+        .empty-history {
+            width: 100%;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .empty-history h2 {
+            color: var(--text-color);
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+
+        .empty-history p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+    </style>
+    <title>Flit</title>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <h3 class="navbar__logo">
+            <a href="/">Flit.ai</a>
+        </h3>
+        <div class="navbar__buttons">
+            <button class="navbar__button" id="modelSelector">
+                <span style="margin-left: 10px;">Flit 1</span>
+                <i class='bx bx-chevron-down' style="rotate: 90deg;"></i>
+            </button>
+            <button class="navbar__button" id="themeToggler">
+                <i class='bx bx-sun'></i>
+            </button>
+            <div class="profile-dropdown">
+                <button class="navbar__button" id="profileButton">
+                    <i class='bx bx-menu'></i>
+                </button>
+                <div class="dropdown-menu">
+                    <a href="/" class="dropdown-item">
+                        <i class='bx bx-message'></i>
+                        Chat
+                    </a>
+                    <a href="/history" class="dropdown-item">
+                        <i class='bx bx-task'></i>
+                        History
+                    </a>
+                    </a>
+                    <!-- <a href="/profile" class="dropdown-item">
+                        <i class='bx bx-user'></i>
+                        Profile -->
+                    <!-- <a href="/pricing" class="dropdown-item">
+                        <i class='bx bx-dollar'></i>
+                        Pricing
+                    </a> -->
+                    <a href="/settings" class="dropdown-item">
+                        <i class='bx bx-cog'></i>
+                        Settings
+                    </a>
+                    <a href="t.me/leonidsupv" class="dropdown-item">
+                        <i class='bx bx-support'></i>
+                        Support
+                    </a>
+                    <p class="version-platform">v1.1.16</p>
+                    <!--<a href="/pro" class="dropdown-item">
+                        <i class='bx bx-crown'></i>
+                        Подписка
+                    </a>-->
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Модальное окно выбора модели -->
+    <div class="model-modal" id="modelModal">
+        <div class="model-modal__content">
+            <div class="model-modal__header">
+                <div class="model-modal__search">
+                    <input type="text" placeholder="Search models..." class="model-modal__search-input">
+                    <i class='bx bx-search'></i>
+                </div>
+                <button class="model-modal__close">
+                    <i class='bx bx-x'></i>
+                </button>
+            </div>
+            <div class="model-modal__list">
+
+                <div class="model-item" data-model="flit-1">
+                    <div class="model-item__icon">
+                        <img src="./assets/model/flit-1.png" alt="Flit 1">
+                    </div>
+                    <div class="model-item__info">
+                        <h4>Flit 1</h4>
+                    </div>
+                    <div class="model-item__status">
+                        <span class="model-item__badge">using</span>
+                    </div>
+                </div>
+
+                <div class="model-item" data-model="gemini-pro">
+                    <div class="model-item__icon">
+                        <img src="./assets/model/gemini.svg" alt="Gemini Pro">
+                    </div>
+                    <div class="model-item__info">
+                        <h4>Gemini Pro</h4>
+                    </div>
+                </div>
+
+                <div class="model-item" data-model="gemini-pro-vision">
+                    <div class="model-item__icon">
+                        <img src="./assets/model/gemini-pro.svg" alt="Gemini Pro Vision">
+                    </div>
+                    <div class="model-item__info">
+                        <h4>Gemini Pro Vision</h4>
+                    </div>
+                </div>
+
+                <div class="model-item" data-model="claude-3-opus">
+                    <div class="model-item__icon">
+                        <img src="./assets/model/claude-3-opus.png" alt="Claude 3 Opus">
+                    </div>
+                    <div class="model-item__info">
+                        <h4>Claude 3 Opus</h4>
+                    </div>
+                </div>
+
+                <div class="model-item" data-model="claude-3-sonnet">
+                    <div class="model-item__icon">
+                        <img src="assets/model/claude-3-sonnet.png" alt="Claude 3 Sonnet">
+                    </div>
+                    <div class="model-item__info">
+                        <h4>Claude 3 Sonnet</h4>
+                    </div>
+                </div>
+                <div class="model-item" data-model="grok-3">
+                    <div class="model-item__icon">
+                        <img src="assets/model/grok-3.png" alt="Grok 3">
+                    </div>
+                    <div class="model-item__info">
+                        <h4>Grok 3</h4>
+                    </div>
+                </div>
+
+                <div class="model-item" data-model="gpt-4">
+                    <div class="model-item__icon">
+                        <img src="assets/model/gpt-4.svg" alt="GPT-4">
+                    </div>
+                    <div class="model-item__info">
+                        <h4>GPT-4</h4>
+                    </div>
+                </div>
+
+                <div class="model-item" data-model="gpt-4-turbo">
+                    <div class="model-item__icon">
+                        <img src="assets/model/gpt-4-turbo.svg" alt="GPT-4 Turbo">
+                    </div>
+                    <div class="model-item__info">
+                        <h4>GPT-4 Turbo</h4>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <header class="header">
+
+        <div class="header__title">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h1>Hi,</h1>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <h2>Guest</h2>
+                </div>
+                <i class="bx bx-edit icon-edit-profile"></i>
+            </div>
+            <!--<a href="/profile" class="profile-link">
+                <span>My profile</span>
+                <i class='bx bx-right-arrow-alt'></i>
+            </a>-->
+        </div>
+
+        <!--<div class="slider__title slider-first__title">
+            <div class="header__title header__title-margin">
+                <h3 class="text-obj-h2">Недавние темы</h3>
+            </div>
+    
+            <div class="suggests">
+                <div class="suggests__item" style="width: 100%;">
+                    <div class="recent-topics" id="recentTopics">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>-->
+        
+        <!-- <div class="slider__title slider-second__title">
+            <div class="header__title header__title-margin">
+                <h3 class="text-obj-h2">Act like you are...</h3>
+            </div>
+    
+            <div class="suggests">
+                <div class="suggests__item">
+                    <p class="suggests__item-text">
+                        ...philosopher
+                    </p>
+                    <div class="suggests__item-icon">
+                        <img src="https://cdn3d.iconscout.com/3d/premium/thumb/teacher-3d-icon-download-in-png-blend-fbx-gltf-file-formats--professor-tutor-avatar-man-male-metapeople-pack-people-icons-4159835.png?f=webp" alt="">
+                    </div>
+                </div>
+                <div class="suggests__item">
+                    <p class="suggests__item-text">
+                        ...film critic
+                    </p>
+                    <div class="suggests__item-icon">
+                        <img src="https://cdn3d.iconscout.com/3d/premium/thumb/west-businessman-3d-icon-download-in-png-blend-fbx-gltf-file-formats--young-man-male-business-people-avatars-pack-icons-7825775.png" alt="">
+                    </div>
+                </div>
+                <div class="suggests__item">
+                    <p class="suggests__item-text">
+                        ...JavaScript console
+                    </p>
+                    <div class="suggests__item-icon">
+                        <img src="https://cdn3d.iconscout.com/3d/premium/thumb/teacher-3d-icon-download-in-png-blend-fbx-gltf-file-formats--education-study-learning-professional-avatar-pack-people-icons-10199756.png" alt="">
+                    </div>
+                </div>
+                <div class="suggests__item">
+                    <p class="suggests__item-text">
+                        ...web-designer
+                    </p>
+                    <div class="suggests__item-icon">
+                        <img src="https://cdn3d.iconscout.com/3d/premium/thumb/hrd-manager-3d-icon-download-in-png-blend-fbx-gltf-file-formats--man-male-guy-business-people-avatars-pack-icons-7825761.png?f=webp" alt="">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="slider__title slider-second__title">
+            <div class="header__title header__title-margin">
+                <h3 class="text-obj-h2">Act like you are...</h3>
+            </div>
+    
+            <div class="suggests">
+                <div class="suggests__item">
+                    <p class="">
+                        ...1
+                    </p>
+                    <div>
+                        <img src="" alt="">
+                    </div>
+                </div>
+                <div class="suggests__item">
+                    <p class="">
+                        ...2
+                    </p>
+                    <div>
+                        <img src="" alt="">
+                    </div>
+                </div>
+                <div class="suggests__item">
+                    <p class="">
+                        ...3
+                    </p>
+                    <div>
+                        <img src="" alt="">
+                    </div>
+                </div>
+                <div class="suggests__item">
+                    <p class="">
+                        ...4
+                    </p>
+                    <div>
+                        <img src="" alt="">
+                    </div>
+                </div>
+            </div>
+        </div> -->
+
+    </header>
+
+    <section class="chats"></section>
+
+    <section class="prompt">
+        <form action="#" class="prompt__form" novalidate>
+            <div class="prompt__input-wrapper">
+                <input type="text" placeholder="Enter a prompt here" class="prompt__form-input" required>
+                <button class="prompt__form-button" id="sendButton">
+                    <i class='bx bx-send'></i>
+                </button>
+                <button class="prompt__form-button" id="deleteButton">
+                    <i class='bx bx-trash'></i>
+                </button>
+            </div>
+        </form>
+        <p class="prompt__disclaim">
+            AI-generated, for reference only
+        </p>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="./src/js/script.js"></script>
+</body>
+
+</html>
