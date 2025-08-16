@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>История чата</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="../src/css/normalize.css">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <h3 class="navbar__logo">
+            <a href="/">Flit.ai</a>
+        </h3>
+        <div class="navbar__buttons">
+            <a href="/" class="navbar__button">
+                <span style="margin: 0px 5px;">Home</span>
+            </a>
+            <button class="navbar__button" id="themeToggler">
+                <i class='bx bx-sun'></i>
+            </button>
+            <div class="profile-dropdown">
+                <button class="navbar__button" id="profileButton">
+                    <i class='bx bx-menu'></i>
+                </button>
+                <div class="dropdown-menu">
+                    <a href="/" class="dropdown-item">
+                        <i class='bx bx-message'></i>
+                        Chat
+                    </a>
+                    <a href="/history/index.html" class="dropdown-item">
+                        <i class='bx bx-task'></i>
+                        History
+                    </a>
+                    <a href="/profile" class="dropdown-item">
+                        <i class='bx bx-user'></i>
+                        Profile
+                    </a>
+                    <a href="/pricing" class="dropdown-item">
+                        <i class='bx bx-dollar'></i>
+                        Pricing
+                    </a>
+                    <a href="/settings" class="dropdown-item">
+                        <i class='bx bx-cog'></i>
+                        Settings
+                    </a>
+                    <a href="t.me/flit_ai_support_bot" target="_blank" class="dropdown-item">
+                        <i class='bx bx-support'></i>
+                        Support
+                    </a>
+                    <p class="version-platform">v1.1.16</p>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="history-container">
+        <div class="history-header">
+            <a href="/" class="btn btn-primary">Back to the chat</a>
+        </div>
+        <div class="history-list" id="historyList">
+            <!-- список историй -->
+        </div>
+    </div>
+
+    <script>
+        // Функции для работы с историей
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function loadHistory() {
+            const historyList = document.getElementById('historyList');
+            const savedConversations = JSON.parse(localStorage.getItem('saved-api-chats')) || [];
+
+            if (savedConversations.length === 0) {
+                historyList.innerHTML = `
+                    <div class="empty-history">
+                        <h2 style="color: var(--text-color);">The story is empty</h2>
+                        <p style="color: var(--text-color);">You don't have any saved dialogs yet.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            historyList.innerHTML = savedConversations.map((conversation, index) => `
+                <div class="history-item" data-index="${index}">
+                    <div class="history-item-header">
+                        <div class="history-item-date">${formatDate(conversation.timestamp || Date.now())}</div>
+                        <div class="history-item-actions">
+                            <button class="btn btn-danger" onclick="deleteConversation(${index})">delete</button>
+                        </div>
+                    </div>
+                    <div class="history-item-content">
+                        <p><strong>You:</strong> ${conversation.userMessage}</p>
+                        <p><strong>Answer:</strong> ${conversation.apiResponse?.candidates?.[0]?.content?.parts?.[0]?.text || 'Нет ответа'}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteConversation(index) {
+            if (confirm('Вы уверены, что хотите удалить этот диалог?')) {
+                const savedConversations = JSON.parse(localStorage.getItem('saved-api-chats')) || [];
+                savedConversations.splice(index, 1);
+                localStorage.setItem('saved-api-chats', JSON.stringify(savedConversations));
+                loadHistory();
+            }
+        }
+
+        function viewConversation(index) {
+            window.location.href = `../index.html?conversation=${index}`;
+        }
+
+        // Загружаем историю при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHistory();
+
+            // Обработка выпадающего меню профиля
+            const profileButton = document.getElementById('profileButton');
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+
+            if (profileButton && dropdownMenu) {
+                profileButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdownMenu.classList.toggle('show');
+                });
+
+                // Закрытие меню при клике вне его
+                document.addEventListener('click', (e) => {
+                    if (!dropdownMenu.contains(e.target) && !profileButton.contains(e.target)) {
+                        dropdownMenu.classList.remove('show');
+                    }
+                });
+            }
+
+            // Обработка переключения темы
+            const themeToggleButton = document.getElementById('themeToggler');
+            if (themeToggleButton) {
+                themeToggleButton.addEventListener('click', () => {
+                    const isLightTheme = document.body.classList.toggle('light_mode');
+                    localStorage.setItem('themeColor', isLightTheme ? 'light_mode' : 'dark_mode');
+                    themeToggleButton.innerHTML = isLightTheme ? '<i class="bx bx-moon"></i>' : '<i class="bx bx-sun"></i>';
+                });
+
+                // Загружаем сохраненную тему
+                const isLightTheme = localStorage.getItem('themeColor') === 'light_mode';
+                document.body.classList.toggle('light_mode', isLightTheme);
+                themeToggleButton.innerHTML = isLightTheme ? '<i class="bx bx-moon"></i>' : '<i class="bx bx-sun"></i>';
+            }
+        });
+    </script>
+</body>
+</html>
